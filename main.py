@@ -1,5 +1,7 @@
 import logging
 import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler,
@@ -7,7 +9,21 @@ from telegram.ext import (
 )
 import database as db
 
-# Environment Variables irraa Fudhachuuf
+# --- RENDER WEB SERVICE PORT BINDING FIX ---
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot is alive and running!")
+    def log_message(self, format, *args):
+        return  # Logs garmalee akka hin baay'anneef
+
+def run_http_server():
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+    server.serve_forever()
+
+# --- CONFIGURATIONS ---
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "5558713786"))
 VIP_CHANNEL_ID = int(os.getenv("VIP_CHANNEL_ID", "-1004305147982"))
@@ -138,7 +154,6 @@ async def handle_admin_approval(update: Update, context: ContextTypes.DEFAULT_TY
     if action == "approve":
         await db.update_status(student_id, "CONFIRMED")
         
-        # Linkii Automatic kan nama 1 qofaf hojjetu uumuu
         invite_link = await context.bot.create_chat_invite_link(
             chat_id=VIP_CHANNEL_ID,
             member_limit=1
@@ -194,6 +209,11 @@ async def post_init(application):
     await db.init_db()
 
 def main():
+    # Start HTTP server on background thread so Render detects open port
+    server_thread = threading.Thread(target=run_http_server, daemon=True)
+    server_thread.start()
+    print("HTTP Health Check server started on port:", os.environ.get("PORT", 10000))
+
     app = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
 
     conv_handler = ConversationHandler(
