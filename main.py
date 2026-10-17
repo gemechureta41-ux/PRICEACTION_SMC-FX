@@ -197,7 +197,7 @@ def main():
     app = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
 
     conv_handler = ConversationHandler(
-        entry_points=[CallbackQueryHandler(start_registration, pattern="^register\$")],
+        entry_points=[CallbackQueryHandler(start_registration, pattern=r"^register\$")],
         states={
             NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_name)],
             PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)],
@@ -211,7 +211,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("admin", admin_dashboard))
     app.add_handler(conv_handler)
-    app.add_handler(CallbackQueryHandler(handle_admin_approval, pattern="^(approve|reject)_"))
+    app.add_handler(CallbackQueryHandler(handle_admin_approval, pattern=r"^(approve|reject)_"))
 
     print("Bot is live...")
     app.run_polling()
