@@ -16,7 +16,7 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b"Bot is alive and running!")
     def log_message(self, format, *args):
-        return  # Logs garmalee akka hin baay'anneef
+        return
 
 def run_http_server():
     port = int(os.environ.get("PORT", 10000))
@@ -209,7 +209,6 @@ async def post_init(application):
     await db.init_db()
 
 def main():
-    # Start HTTP server on background thread so Render detects open port
     server_thread = threading.Thread(target=run_http_server, daemon=True)
     server_thread.start()
     print("HTTP Health Check server started on port:", os.environ.get("PORT", 10000))
